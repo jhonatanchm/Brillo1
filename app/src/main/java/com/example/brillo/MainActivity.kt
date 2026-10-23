@@ -5,8 +5,10 @@ import android.content.Intent
 import android.graphics.Color
 import android.graphics.PixelFormat
 import android.net.Uri
+import android.os.Build
 import android.os.IBinder
 import android.provider.Settings
+import android.util.DisplayMetrics
 import android.view.*
 import android.widget.SeekBar
 
@@ -42,15 +44,27 @@ class OverlayService : Service() {
         val w = getSystemService(WINDOW_SERVICE) as WindowManager
         wm = w
 
+        val real = DisplayMetrics()
+        @Suppress("DEPRECATION")
+        w.defaultDisplay.getRealMetrics(real)
+
         val d = View(this).apply { setBackgroundColor(Color.BLACK); alpha = 0.3f }
         dim = d
-        w.addView(d, WindowManager.LayoutParams(
-            -1, -1,
+        val dimLp = WindowManager.LayoutParams(
+            real.widthPixels + 400, real.heightPixels + 400,
             WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
             WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
                 WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE or
-                WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
-            PixelFormat.TRANSLUCENT))
+                WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or
+                WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
+            PixelFormat.TRANSLUCENT).apply {
+                gravity = Gravity.CENTER
+                if (Build.VERSION.SDK_INT >= 28) {
+                    layoutInDisplayCutoutMode =
+                        WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
+                }
+            }
+        w.addView(d, dimLp)
 
         val s = SeekBar(this).apply {
             max = 90; progress = 30
@@ -64,11 +78,11 @@ class OverlayService : Service() {
         }
         panel = s
         w.addView(s, WindowManager.LayoutParams(
-            800, WindowManager.LayoutParams.WRAP_CONTENT,
+            real.widthPixels * 8 / 10, WindowManager.LayoutParams.WRAP_CONTENT,
             WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
             WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
             PixelFormat.TRANSLUCENT).apply {
-                gravity = Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL; y = 200 })
+                gravity = Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL; y = 250 })
         return START_STICKY
     }
 
