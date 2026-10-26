@@ -70,10 +70,11 @@ class OverlayService : Service() {
         w.defaultDisplay.getRealMetrics(real)
 
         // Capa oscura
+        val big = maxOf(real.widthPixels, real.heightPixels) + 400
         val d = View(this).apply { setBackgroundColor(Color.BLACK); alpha = 0.3f }
         dim = d
         val dimLp = WindowManager.LayoutParams(
-            real.widthPixels + 400, real.heightPixels + 400,
+            big, big,
             WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
             WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
                 WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE or
